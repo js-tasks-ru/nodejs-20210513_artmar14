@@ -1,6 +1,7 @@
 const url = require('url');
 const http = require('http');
 const path = require('path');
+const fs = require('fs');
 
 const server = new http.Server();
 
@@ -11,6 +12,25 @@ server.on('request', (req, res) => {
 
   switch (req.method) {
     case 'GET':
+      if (path.dirname(req.url) === '/') {
+
+        const getStream = fs.createReadStream(filepath);
+
+        getStream.on('error', (err) => {
+          if (err.code === 'ENOENT') {
+            res.statusCode = 404;
+            res.end(`No such file, error ${res.statusCode}`);
+          } else {
+            res.statusCode = 400;
+            res.end('Something went wrong');
+          }
+        });
+
+        getStream.pipe(res);
+      } else {
+        res.statusCode = 400;
+        res.end('Subdirectories are not allowed');
+      }
 
       break;
 
